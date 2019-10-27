@@ -47,24 +47,29 @@ This method computes the differences and a minimal change statement.
 def postprocess_remediation_config(remediation_config):
     for child in remediation_config.get_children('startswith', 'interface '):
         current_vlans = child.get_child('startswith', 'undo port trunk permit vlan')
-        m = re.findall('port trunk permit vlan ([0-9 ]+)', current_vlans.text)
-
-        current_vlans_list = vlanStringToArray(m[0])
+        if current_vlans:
+            m = re.findall('port trunk permit vlan ([0-9 ]+)', current_vlans.text)
+            current_vlans_list = vlanStringToArray(m[0])
+        else:
+            current_vlans_list = []
 
         target_vlans = child.get_child('startswith', 'port trunk permit vlan')
-        m = re.findall('port trunk permit vlan ([0-9 ]+)', target_vlans.text)
-        target_vlans_list = vlanStringToArray(m[0])
+        if target_vlans:
+            m = re.findall('port trunk permit vlan ([0-9 ]+)', target_vlans.text)
+            target_vlans_list = vlanStringToArray(m[0])
+        else:
+            target_vlans_list = []
 
         remove_vlans = set(current_vlans_list) - set(target_vlans_list)
         add_vlans = set(target_vlans_list) - set(current_vlans_list)
         if len(add_vlans) > 0:
             target_vlans.text = 'port trunk permit vlan '+' '.join(add_vlans)
-        else:
+        elif target_vlans:
             child.del_child(target_vlans)
 
         if len(remove_vlans) >0:
             current_vlans.text = 'undo port trunk permit vlan ' + ' '.join(remove_vlans)
-        else:
+        elif current_vlans:
             child.del_child(current_vlans)
 
     return remediation_config
