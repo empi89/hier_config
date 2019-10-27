@@ -9,7 +9,7 @@ def vlanStringToArray(string):
     matches = re.findall('(\d+) to (\d+)', string)
     vlans = []
     for match in matches:
-        vlans.extend(range(int(match[0]), int(match[1]) + 1))
+        vlans.extend(map(str, range(int(match[0]), int(match[1]) + 1)))
 
     string = re.sub('(\d+) to (\d+)', '', string)
 
