@@ -146,7 +146,7 @@ class Host:
         else:
             raise AttributeError("Missing host.running_config or host.compiled_config")
 
-        if self.options['style'] == 'comware5':
+        if self.hconfig_options['style'] == 'comware5':
             self.remediation_config = comware5.postprocess_remediation_config(self.remediation_config)
 
         self.remediation_config.add_sectional_exiting()
