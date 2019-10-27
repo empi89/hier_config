@@ -1,6 +1,7 @@
 from hier_config.base import HConfigBase
 
 import re
+import hier_config.comware5 as comware5
 
 __version__ = '1.6.0'
 
@@ -147,6 +148,9 @@ class HConfig(HConfigBase):
 
     def load_from_string(self, config_text):
         """ Create Hierarchical Configuration nested objects from text """
+
+        if self.options['style'] == 'comware5':
+            config_text = comware5.preprocessor(config_text)
 
         for sub in self.options['full_text_sub']:
             config_text = re.sub(
