@@ -71,5 +71,8 @@ def postprocess_remediation_config(remediation_config):
             current_vlans.text = 'undo port trunk permit vlan ' + ' '.join(remove_vlans)
         elif current_vlans:
             child.del_child(current_vlans)
+            
+        if len(child) == 0:
+            child.delete()
 
     return remediation_config
