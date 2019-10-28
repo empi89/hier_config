@@ -34,7 +34,7 @@ def preprocessor(config_text):
         interface_new = re.sub('[^undo]( port trunk permit vlan ([0-9 to]+)\n)+', '\n port trunk permit vlan '+' '.join(vlans) + '\n', interface[0])
 
         # replace interface section with modified section
-        config_text = re.sub(interface[0], interface_new, config_text)
+        config_text = config_text.replace(interface[0], interface_new)
 
     return config_text
 
