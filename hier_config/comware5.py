@@ -18,7 +18,7 @@ def vlanStringToArray(string):
     return vlans
 """
 Comware uses multiple lines of "port trunk permit vlan" if more then 10 vlans are tagged on a port. 
-This method replaces it with one line dealing with all vlans. Also normalizes the "to"-notation for vlan ranges.
+This method replaces it with one line per vlan. Also normalizes the "to"-notation for vlan ranges.
 """
 def preprocessor(config_text):
     interfaces = re.findall('(^interface ([A-Za-z0-9\/\-\:]+)$(.*?)^#$)+', config_text, re.MULTILINE | re.DOTALL)
@@ -31,48 +31,8 @@ def preprocessor(config_text):
                 vlans.extend(vlanStringToArray(i))
 
         # replace multiple statements with one
-        interface_new = re.sub('[^undo]( port trunk permit vlan ([0-9 to]+)\n)+', '\n port trunk permit vlan '+' '.join(vlans) + '\n', interface[0])
-
+        interface_new = re.sub('[^undo]( port trunk permit vlan ([0-9 to]+)\n)+', '\n port trunk permit vlan '.join(vlans) + '\n', interface[0])
         # replace interface section with modified section
         config_text = config_text.replace(interface[0], interface_new)
 
     return config_text
-
-"""
-As multiple vlan ids are handled in the same configuration line a "undo" and "do" on all VLANs 
-might impact traffic forwarding. 
-
-This method computes the differences and a minimal change statement.
-"""
-def postprocess_remediation_config(remediation_config):
-    for child in remediation_config.get_children('startswith', 'interface '):
-        current_vlans = child.get_child('startswith', 'undo port trunk permit vlan')
-        if current_vlans:
-            m = re.findall('port trunk permit vlan ([0-9 ]+)', current_vlans.text)
-            current_vlans_list = vlanStringToArray(m[0])
-        else:
-            current_vlans_list = []
-
-        target_vlans = child.get_child('startswith', 'port trunk permit vlan')
-        if target_vlans:
-            m = re.findall('port trunk permit vlan ([0-9 ]+)', target_vlans.text)
-            target_vlans_list = vlanStringToArray(m[0])
-        else:
-            target_vlans_list = []
-
-        remove_vlans = set(current_vlans_list) - set(target_vlans_list)
-        add_vlans = set(target_vlans_list) - set(current_vlans_list)
-        if len(add_vlans) > 0:
-            target_vlans.text = 'port trunk permit vlan '+' '.join(add_vlans)
-        elif target_vlans:
-            child.del_child(target_vlans)
-
-        if len(remove_vlans) >0:
-            current_vlans.text = 'undo port trunk permit vlan ' + ' '.join(remove_vlans)
-        elif current_vlans:
-            child.del_child(current_vlans)
-            
-        if len(child) == 0:
-            child.delete()
-
-    return remediation_config

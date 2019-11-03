@@ -1,8 +1,6 @@
 from hier_config import HConfig
 import hier_config.helpers as H
 
-import hier_config.comware5 as comware5
-
 class Host:
     """
     A host object is a convenient way to loading host inventory
@@ -145,9 +143,6 @@ class Host:
             )
         else:
             raise AttributeError("Missing host.running_config or host.compiled_config")
-
-        if self.hconfig_options['style'] == 'comware5':
-            self.remediation_config = comware5.postprocess_remediation_config(self.remediation_config)
 
         self.remediation_config.add_sectional_exiting()
         self.remediation_config.set_order_weight()
